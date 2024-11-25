@@ -12,3 +12,10 @@ bash
 Copy code
 uvicorn app.main:app --reload
 La aplicación estará disponible en http://localhost:8000.
+
+Pruebas Adicionales
+Para probar que todo funciona correctamente, puedes también acceder a la documentación automática que proporciona FastAPI:
+
+Swagger UI: http://localhost:8000/docs
+Redoc: http://localhost:8000/redoc
+Aquí podrás ver y probar todos los endpoints disponibles.
