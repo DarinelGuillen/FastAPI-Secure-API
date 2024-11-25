@@ -1,15 +1,12 @@
-# Credenciales para Google Drive API
+# .envSample
+
+# Credentials for Google Drive API
 GOOGLE_CLIENT_ID=your-google-client-id
 GOOGLE_CLIENT_SECRET=your-google-client-secret
-GOOGLE_FOLDER_APP_ONLY_ACESS="My Drive/FITNESS_APP-ONLY" #reed all the sheets
+GOOGLE_SERVICE_ACCOUNT_FILE=path/to/your/service_account.json
+GOOGLE_FOLDER_APP_ONLY_ACCESS="My Drive/FITNESS_APP-ONLY"
 
-# Credenciales generales
-REDIRECT_URI=http://localhost:3000 #or 8000
-SCOPES_DRIVE=https://www.googleapis.com/auth/drive.file
-SCOPES_SHEETS=https://www.googleapis.com/auth/spreadsheets
-
+# General credentials
 SECRET_KEY=your-secret-key
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
-
-

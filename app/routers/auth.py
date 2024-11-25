@@ -9,10 +9,10 @@ router = APIRouter()
 
 @router.post("/login")
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
-    # Aquí deberías verificar las credenciales del usuario
-    # Por simplicidad, asumiremos que el usuario es válido
+    # Here you should verify the user's credentials
+    # For simplicity, we assume the user is valid if username and password match
     if form_data.username != "user@example.com" or form_data.password != "password":
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Credenciales incorrectas")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
 
     access_token_expires = timedelta(minutes=30)
     access_token = create_access_token(

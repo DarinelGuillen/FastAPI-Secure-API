@@ -1,39 +1,43 @@
 # app/services/google_drive.py
 
-from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import Flow
+from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from app.core.config import settings
 from fastapi import HTTPException
-import os
 
-SCOPES = ['https://www.googleapis.com/auth/drive']
+SCOPES = ['https://www.googleapis.com/auth/drive', 'https://www.googleapis.com/auth/spreadsheets']
 
-def get_flow():
-    return Flow.from_client_config(
-        {
-            "web": {
-                "client_id": settings.GOOGLE_CLIENT_ID,
-                "client_secret": settings.GOOGLE_CLIENT_SECRET,
-                "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-                "token_uri": "https://oauth2.googleapis.com/token",
-                "redirect_uris": ["http://localhost:8000/drive/oauth2callback"]
-            }
-        },
-        scopes=SCOPES
+def get_credentials():
+    creds = service_account.Credentials.from_service_account_file(
+        settings.GOOGLE_SERVICE_ACCOUNT_FILE, scopes=SCOPES
     )
-
-def get_credentials(token: str):
-    # En un caso real, debes almacenar y recuperar el token de acceso del usuario
-    # Aquí, asumimos que el token es válido y lo usamos directamente
-    creds = Credentials(token)
     return creds
 
-def list_files(token: str):
-    creds = get_credentials(token)
+def get_folder_id(folder_path):
+    creds = get_credentials()
     try:
         service = build('drive', 'v3', credentials=creds)
-        results = service.files().list(pageSize=10, fields="files(id, name)").execute()
+        folder_names = folder_path.strip('/').split('/')
+        parent_id = 'root'  # Start from the root folder
+        for name in folder_names:
+            query = f"'{parent_id}' in parents and name='{name}' and mimeType='application/vnd.google-apps.folder' and trashed=false"
+            results = service.files().list(q=query, fields="files(id, name)").execute()
+            items = results.get('files', [])
+            if not items:
+                raise HTTPException(status_code=404, detail=f"Folder '{name}' not found")
+            parent_id = items[0]['id']
+        return parent_id
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+def list_files_in_folder():
+    creds = get_credentials()
+    try:
+        service = build('drive', 'v3', credentials=creds)
+        folder_path = settings.GOOGLE_FOLDER_APP_ONLY_ACCESS
+        folder_id = get_folder_id(folder_path)
+        query = f"'{folder_id}' in parents and mimeType='application/vnd.google-apps.spreadsheet' and trashed=false"
+        results = service.files().list(q=query, fields="files(id, name)").execute()
         items = results.get('files', [])
         return items
     except Exception as e:
