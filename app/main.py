@@ -1,7 +1,12 @@
 # app/main.py
 
+import logging
 from fastapi import FastAPI
 from app.routers import auth, drive
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="My API",
@@ -9,11 +14,12 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Incluir routers
+# Include routers
 app.include_router(auth.router, prefix="/auth", tags=["auth"])
 app.include_router(drive.router, prefix="/drive", tags=["drive"])
 
-# Endpoint de ejemplo
+# Example endpoint
 @app.get("/hello")
 async def read_root():
+    logger.info("Hello endpoint was called")
     return {"message": "Hello World"}
