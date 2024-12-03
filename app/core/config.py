@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class Settings:
+    GOOGLE_CLIENT_SECRET_JSON: str = os.getenv("GOOGLE_CLIENT_SECRET_JSON")
     GOOGLE_CLIENT_ID: str = os.getenv("GOOGLE_CLIENT_ID")
     GOOGLE_CLIENT_SECRET: str = os.getenv("GOOGLE_CLIENT_SECRET")
     GOOGLE_SERVICE_ACCOUNT_FILE: str = os.getenv("GOOGLE_SERVICE_ACCOUNT_FILE")
