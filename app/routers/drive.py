@@ -1,5 +1,3 @@
-
-
 from fastapi import APIRouter, Depends, HTTPException
 from app.services.google_drive import ensure_drive_setup, read_sheets, get_sheet_content
 from app.services.auth import get_current_user

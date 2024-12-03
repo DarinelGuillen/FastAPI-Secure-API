@@ -1,5 +1,6 @@
 # app/routers/auth.py
 
+import os  # Importa os
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.responses import RedirectResponse
 from app.services.auth import (
@@ -19,13 +20,17 @@ from google.oauth2 import id_token
 from google.auth.transport.requests import Request as GoogleRequest
 
 
-# Establecer variable de entorno para permitir HTTP
-os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
+# Ignorar la validación estricta de los scopes
+os.environ["OAUTHLIB_RELAX_TOKEN_SCOPE"] = "1"
+
+# Permitir transporte inseguro
+os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 
 router = APIRouter()
 
 # Configurar logging
 logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.DEBUG)  # Nivel de depuración
 
 # Ruta para iniciar el login
 @router.get("/login", tags=["auth"])
@@ -62,7 +67,12 @@ async def callback(request: Request):
         redirect_uri="http://localhost:8000/auth/callback",
     )
 
-    flow.fetch_token(authorization_response=str(request.url))
+    try:
+        flow.fetch_token(authorization_response=str(request.url))
+    except Exception as e:
+        logger.error(f"Error al obtener el token: {e}")
+        logger.error(f"Respuesta completa: {e.response.text if hasattr(e, 'response') else 'No hay respuesta'}")
+        raise HTTPException(status_code=500, detail="Error al obtener el token.")
 
     if not flow.credentials:
         raise HTTPException(status_code=400, detail="Credenciales no obtenidas.")
@@ -79,7 +89,8 @@ async def callback(request: Request):
         user_email = id_info.get('email')
         if not user_email:
             raise HTTPException(status_code=400, detail="No se pudo obtener el correo electrónico del usuario.")
-    except ValueError:
+    except ValueError as ve:
+        logger.error(f"Error al verificar el token de ID: {ve}")
         raise HTTPException(status_code=400, detail="Token de ID inválido.")
 
     # Serializa las credenciales y guárdalas
@@ -93,13 +104,22 @@ async def callback(request: Request):
     }
 
     # En un entorno de producción, almacena estas credenciales de manera segura en una base de datos
-    with open(f"user_credentials_{user_email}.pkl", "wb") as token:
-        pickle.dump(creds_data, token)
+    try:
+        with open(f"user_credentials_USERNAME.pkl", "wb") as token:
+            pickle.dump(creds_data, token)
+    except Exception as e:
+        logger.error(f"Error al guardar las credenciales: {e}")
+        raise HTTPException(status_code=500, detail="Error al guardar las credenciales.")
 
     # Genera un token JWT para la sesión
-    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
-        data={"sub": user_email}, expires_delta=access_token_expires
-    )
+    try:
+        access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+        access_token = create_access_token(
+            data={"sub": user_email}, expires_delta=access_token_expires
+        )
+    except Exception as e:
+        logger.error(f"Error al generar el token JWT: {e}")
+        raise HTTPException(status_code=500, detail="Error al generar el token de acceso.")
+
     # Redirige de vuelta al front-end con el token en el fragmento de la URL
     return RedirectResponse(f"http://localhost:3000/#access_token={access_token}")

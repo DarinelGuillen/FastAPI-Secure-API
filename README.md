@@ -55,6 +55,7 @@ This API is built with **FastAPI** to manage authentication and perform operatio
 
 Start the server using Uvicorn:
 ```bash
+.\venv\Scripts\Activate
 uvicorn app.main:app --reload
 ```
 
