@@ -57,7 +57,7 @@ def get_user_credentials(user_id: str):
     Obtiene las credenciales de Google del usuario a partir del user_id.
     """
     try:
-        with open(f"user_credentials_{user_id}.pkl", "rb") as token_file:
+        with open(f"user_credentials_USERNAME.pkl", "rb") as token_file:
             creds_data = pickle.load(token_file)
         creds = Credentials(
             token=creds_data["token"],
